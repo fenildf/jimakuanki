@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+# -*- mode: python ; coding: utf-8 -*-
+#
+# Copyright © 2012 Roland Sieker <ospalh@gmail.com>
+#
+# License: GNU AGPL, version 3 or later;
+# http://www.gnu.org/copyleft/agpl.html
+
+"""
+Turn a video and sets of subtitles into an Anki2 deck.
+"""
+
+from subtitledecker import SubtitleDecker
+import argparse
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description= u'Turn videos and subtitles intto Anki2 decks..')
+    parser.add_argument('-i', '--video', type=str, default='video.avi',
+                        help='Video file input')
+    parser.add_argument('-d', '--deck', type=str, default='deck.apkg',
+                        help='Anki packaged deck file to create')
+    parser.add_argument('-s', '--subtitle', type=str, nargs="+",
+                        help='Subtitle files to use.')
+    parser.add_argument('-l', '--language', type=str,
+                        help='Language you want to learn')
+    parser.add_argument('-n', '--native-language', type=str,
+                        help='Your native language')
+    args = parser.parse_args()
+    sd = SubtitleDecker(args)
+    sd.process()
+    sd.rm_temp_collection()
