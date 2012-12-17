@@ -10,6 +10,7 @@
 
 from anki.lang import _
 
+
 def add_plain_japanese_model(col):
     mm = col.models
     m = mm.new(_('Subtitle deck'))
@@ -32,12 +33,12 @@ def add_plain_japanese_model(col):
     fm = mm.newField(_('Notes'))
     mm.addField(m, fm)
     t = mm.newTemplate(_('Watch'))
-    t['qfmt'] = '<div>{{' + _('Image') + '}}</div>\n{{'+_('Video')+'}}\n' \
+    t['qfmt'] = '<div>{{' + _('Image') + '}}</div>\n{{' + _('Video') + '}}\n' \
         + '<div class=small>{{' + _('Timestamp') + '}}</div>'
-    t['afmt'] = '{{' + _('Image') + '}}\n{{' + _('Audio')+ '}}\n' + \
-        '<div>{{furigana:'+_('Reading')+'}}</div>' + \
-        '<div class="native">{{'+_('Native')+'}}</div>' + \
-        '<div class="small">{{'+_('Timestamp')+'}}</div>'
+    t['afmt'] = '{{' + _('Image') + '}}\n{{' + _('Audio') + '}}\n' + \
+        '<div>{{furigana:' + _('Reading') + '}}</div>' + \
+        '<div class="native">{{' + _('Native') + '}}</div>' + \
+        '<div class="small">{{' + _('Timestamp') + '}}</div>'
     mm.addTemplate(m, t)
     mm.add(m)
     return m

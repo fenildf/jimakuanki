@@ -14,18 +14,15 @@
 Turn a video and sets of subtitles into an Anki2 deck.
 """
 
-import random
-
+import os
+import shutil
+import tempfile
 
 from anki.collection import _Collection
-from anki.storage import _createDB
-import os
-import tempfile
-import shutil
 from anki.db import DB
-from anki.consts import SCHEMA_VERSION
+from anki.exporting import AnkiPackageExporter
 from anki.notes import Note
-from anki.decks import DeckManager
+from anki.storage import _createDB
 
 from plain_japanese_model import add_plain_japanese_model
 
@@ -38,6 +35,7 @@ class SubtitleDecker(object):
     """
     def __init__(self, args):
         self.args = args
+        self.out_file = os.path.abspath(self.args.deck)
         self.col_path = ''
         self.col_name = 'collection'
         self.model = None
@@ -47,11 +45,9 @@ class SubtitleDecker(object):
         self.model['did'] = self.deck_id
         self.col.models.setCurrent(self.model)
 
-
     def get_collection(self):
-    #def Collection(path, lock=True, server=False, sync=True):
         """
-        Create a new collection in memory.
+        Create a new collection
 
         """
         # As we will add a ton of media to our collection, we have to
@@ -65,11 +61,6 @@ class SubtitleDecker(object):
         # add db to col and do any remaining upgrades
         col = _Collection(db, server=False)
         self.model = add_plain_japanese_model(col)
-        # add in reverse order so basic is default
-        # addClozeModel(col)
-        # addForwardOptionalReverse(col)
-        # addForwardReverse(col)
-        # addBasicModel(col)
         col.save()
         col.lock()
         return col
@@ -78,10 +69,14 @@ class SubtitleDecker(object):
         note = Note(self.col, model=self.model)
         note['Timestamp'] = "007"
         self.col.addNote(note)
-        pass
 
+    def export(self):
+        ape = AnkiPackageExporter(self.col)
+        ape.did = self.deck_id
+        ape.includeSched = False
+        ape.includeMedia = True
+        ape.exportInto(self.out_file)
 
     def rm_temp_collection(self):
         self.col.close()
-        print 'should delete {}'.format(self.col_path)
-        #shutil.rmtree(self.col_path)
+        shutil.rmtree(self.col_path)
