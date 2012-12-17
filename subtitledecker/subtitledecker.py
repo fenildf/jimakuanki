@@ -44,8 +44,9 @@ class SubtitleDecker(object):
         self.col = self.get_collection()
         self.dm = self.col.decks
         self.deck_id = self.dm.id("Video deck")
-        self.dm.select(self.deck_id)
+        self.model['did'] = self.deck_id
         self.col.models.setCurrent(self.model)
+
 
     def get_collection(self):
     #def Collection(path, lock=True, server=False, sync=True):
