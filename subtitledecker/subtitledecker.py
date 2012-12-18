@@ -24,7 +24,7 @@ from anki.exporting import AnkiPackageExporter
 from anki.notes import Note
 from anki.storage import _createDB
 
-from plain_japanese_model import add_plain_japanese_model
+from plain_model import add_plain_model
 
 
 class SubtitleDecker(object):
@@ -60,7 +60,7 @@ class SubtitleDecker(object):
         db.execute("pragma synchronous = off")
         # add db to col and do any remaining upgrades
         col = _Collection(db, server=False)
-        self.model = add_plain_japanese_model(col)
+        self.model = add_plain_model(col)
         col.save()
         col.lock()
         return col
