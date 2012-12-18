@@ -15,7 +15,7 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description=u'Turn videos and subtitles intto Anki2 decks..')
+        description='Turn videos and subtitles intto Anki2 decks..')
     parser.add_argument('-i', '--video', type=str, default='video.avi',
                         help='Video file input')
     parser.add_argument('-d', '--deck', type=str, default='deck.apkg',
