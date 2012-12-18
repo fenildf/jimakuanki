@@ -23,7 +23,7 @@ from anki.exporting import AnkiPackageExporter
 from anki.notes import Note
 from anki.storage import _createDB
 
-from plain_model import add_plain_model
+from .plain_model import add_plain_model
 
 
 class SubtitleDecker(object):
