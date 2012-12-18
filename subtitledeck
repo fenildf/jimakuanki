@@ -18,14 +18,23 @@ if __name__ == '__main__':
         description='Turn videos and subtitles intto Anki2 decks..')
     parser.add_argument('-i', '--video', type=str, default='video.avi',
                         help='Video file input')
-    parser.add_argument('-d', '--deck', type=str, default='deck.apkg',
-                        help='Anki packaged deck file to create')
+    parser.add_argument('-d', '--deck', type=str, default='Video deck',
+                        help='Name of the deck inside the outputfile')
+    parser.add_argument('-o', '--output', type=str, default='video_deck.apkg',
+                        help='Name of the output file')
     parser.add_argument('-s', '--subtitle', type=str, nargs="+",
                         help='Subtitle files to use.')
     parser.add_argument('-l', '--language', type=str,
-                        help='Language you want to learn')
+                        help='Code for the language you want to learn.')
+    parser.add_argument('--language-name', type=str,
+                        help='name of the language you want to learn.')
+    parser.add_argument('-r', '--reading-field', action='store_true',
+                        help='''Add a reading field. (Use this for Japanese \
+and Chinese).''')
     parser.add_argument('-n', '--native-language', type=str,
-                        help='Your native language')
+                        help='Code for your native language')
+    parser.add_argument('--native-language-name', type=str,
+                        help='Name of your native language.')
     args = parser.parse_args()
     sd = SubtitleDecker(args)
     sd.process()

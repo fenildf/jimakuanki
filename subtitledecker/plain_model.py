@@ -11,12 +11,22 @@
 from anki.lang import _
 
 
-def add_plain_model(col):
+def add_model(col, args):
     mm = col.models
-    m = mm.new(_('Subtitle deck'))
+    if args.deck:
+        model_name = _('Subtitles ({0})').format(args.deck)
+    else:
+        model_name = _('Subtitles')
+    m = mm.new(model_name)
     fm = mm.newField(_('Timestamp'))
     mm.addField(m, fm)
-    fm = mm.newField(_('Text'))
+    if args.language_name:
+        text_name = args.language_name
+    elif args.language:
+        text_name = _('Text ({0})').format(args.language)
+    else:
+        text_name = _('Text')
+    fm = mm.newField(text_name)
     mm.addField(m, fm)
     fm = mm.newField(_('Native'))
     mm.addField(m, fm)

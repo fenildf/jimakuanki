@@ -34,13 +34,13 @@ class SubtitleDecker(object):
     """
     def __init__(self, args):
         self.args = args
-        self.out_file = os.path.abspath(self.args.deck)
+        self.out_file = os.path.abspath(self.args.output)
         self.col_path = ''
         self.col_name = 'collection'
         self.model = None
         self.col = self.get_collection()
         self.dm = self.col.decks
-        self.deck_id = self.dm.id("Video deck")
+        self.deck_id = self.dm.id(self.args.deck)
         self.model['did'] = self.deck_id
         self.col.models.setCurrent(self.model)
 
