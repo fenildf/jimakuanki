@@ -76,16 +76,16 @@ class SubtitleDecker(object):
 
 
     def add_model(self):
-        self.model = add_simple_model(self.col, self.model_name, self.language_name,
-                               self.native_language_name)
+        self.model = add_simple_model(
+            self.col, self.model_name, self.language_name,
+            self.native_language_name)
         self.col.models.setCurrent(self.model)
         self.model['did'] = self.deck_id
 
     def _fix_path(self, path):
-        dirs, base = os.path.split(path)
-        if not dirs:
-            dirs = self.start_dir
-        return os.path.abspath(os.path.join(dirs, base))
+        if not os.path.isabs(path):
+            return os.path.abspath(os.path.join(self.start_dir, path))
+        return path
 
     def get_collection(self):
         """
