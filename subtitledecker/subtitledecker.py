@@ -64,10 +64,7 @@ class SubtitleDecker(object):
 
 
     def set_from_args(self, args):
-        dirs, base = os.path.split(args.output)
-        if not dirs:
-            dirs = self.start_dir
-        self.out_file = os.path.abspath(os.path.join(dirs, base))
+        self.out_file = self._fix_path(args.output)
         print('Will write to "{}"'.format(self.out_file))
         self.deck_name = args.deck
         self.deck_id = self.dm.id(args.deck)
@@ -84,6 +81,11 @@ class SubtitleDecker(object):
         self.col.models.setCurrent(self.model)
         self.model['did'] = self.deck_id
 
+    def _fix_path(self, path):
+        dirs, base = os.path.split(path)
+        if not dirs:
+            dirs = self.start_dir
+        return os.path.abspath(os.path.join(dirs, base))
 
     def get_collection(self):
         """
@@ -108,6 +110,8 @@ class SubtitleDecker(object):
         print('Subtitle files: {}'.format(self.subtitle_files))
         print (len(self.subtitle_files))
         for sta in self.subtitle_files:
+            print ('get from {}'.format(sta))
+            sta = self._fix_path(sta)
             print ('get from {}'.format(sta))
             try:
                 subs = pysubs.load(sta)
