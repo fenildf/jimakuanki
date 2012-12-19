@@ -24,30 +24,66 @@ from anki.db import DB
 from anki.exporting import AnkiPackageExporter
 from anki.notes import Note
 from anki.storage import _createDB
+from anki.lang import _
 
-from .model import add_model
+from .model import add_simple_model
 
 
 class SubtitleDecker(object):
     """
     Representation of an Anki deck containing subtitles.
 
+    This is a representation of an Anki2 spaced repetition system
+    flashcard collection. The collection can be automatically filled
+    with a deck of flashcards of video clips and subtitles.
 
+    Workflow:
+    * Create SubtitleDecker object
+    * Add a video file
+    * Add subtitles, either as extra files or pointing to subtitles
+      from the video files.
+    * Set up other parameters such as languages, deck and output file names.
+    *
     """
-    def __init__(self, args):
+    def __init__(self):
         self.default_sub_encoding = 'utf-8'
-        self.args = args
-        self.out_file = os.path.abspath(self.args.output)
         self.col_path = ''
         self.col_name = 'collection'
         self.model = None
-        self.subs = []
-        self.get_subtitles_from_files()
+        self.out_file = ''
+        self.deck_id = None
+        self.subtitle_files = []
+        self.subtitles = []
+        self.video = None
+        self.model_name = None
+        self.language_name = None
+        self.native_language_name = None
+        self.start_dir = os.getcwd()
         self.col = self.get_collection()
         self.dm = self.col.decks
-        self.deck_id = self.dm.id(self.args.deck)
-        self.model['did'] = self.deck_id
+
+
+    def set_from_args(self, args):
+        dirs, base = os.path.split(args.output)
+        if not dirs:
+            dirs = self.start_dir
+        self.out_file = os.path.abspath(os.path.join(dirs, base))
+        print('Will write to "{}"'.format(self.out_file))
+        self.deck_name = args.deck
+        self.deck_id = self.dm.id(args.deck)
+        self.model_name = 'Subtitles ({})'.format(self.deck_name)
+        self.language_name = args.language_name
+        self.native_language_name = args.native_language_name
+        self.subtitle_files = args.subtitles
+        self._get_subtitles_from_files()
+
+
+    def add_model(self):
+        self.model = add_simple_model(self.col, self.model_name, self.language_name,
+                               self.native_language_name)
         self.col.models.setCurrent(self.model)
+        self.model['did'] = self.deck_id
+
 
     def get_collection(self):
         """
@@ -64,40 +100,35 @@ class SubtitleDecker(object):
         db.execute("pragma synchronous = off")
         # add db to col and do any remaining upgrades
         col = _Collection(db, server=False)
-        self.model = add_model(col, self.args)
         col.save()
         col.lock()
         return col
 
-    def get_subtitles_from_files(self):
-        print (len(self.args.subtitles))
-        for sta in self.args.subtitles:
+    def _get_subtitles_from_files(self):
+        print('Subtitle files: {}'.format(self.subtitle_files))
+        print (len(self.subtitle_files))
+        for sta in self.subtitle_files:
             print ('get from {}'.format(sta))
             try:
                 subs = pysubs.load(sta)
             except pysubs.exceptions.EncodingDetectionError:
                 subs = pysubs.load(sta, self.default_sub_encoding)
-            self.subs.append(subs)
+            self.subtitles.append(subs)
+
 
 
     def process(self):
-        if not self.subs:
+        if not self.subtitles:
             print ('No subtitles loaded')
             return
-        time_sub = self.subs[0]
+        time_sub = self.subtitles[0]
+        print('Write {} lines'.format(len(time_sub)))
         # Need to avoid code duplication.
-        if self.args.language_name:
-            text_name = self.args.language_name
-        elif self.args.language:
-            text_name = _('Text ({0})').format(self.args.language)
-        else:
-            text_name = _('Text')
-
         for sl in time_sub:
             note = Note(self.col, model=self.model)
-            note['Timestamp'] = '{start}–{end}'.format(
-                start=sl.start, end=sl.end)
-            note[text_name] = sl.text
+            note['Start'] = str(sl.start)
+            note['End'] = str(sl.end)
+            note[self.language_name] = sl.plaintext
             self.col.addNote(note)
 
 
@@ -108,6 +139,8 @@ class SubtitleDecker(object):
         ape.includeMedia = True
         ape.exportInto(self.out_file)
 
-    def rm_temp_collection(self):
+    def cleanup(self):
         self.col.close()
         shutil.rmtree(self.col_path)
+        self.col = None
+        self.model = None

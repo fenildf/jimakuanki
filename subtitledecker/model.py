@@ -8,45 +8,75 @@
 # License: GNU AGPL, version 3 or later;
 # http://www.gnu.org/licenses/agpl.html
 
+
+"""
+Create a simple static model for the subtitle deck.
+"""
 from anki.lang import _
 
+remove_arial = True
+extra_styling = '''
+.small {font-size: 9px;}
+'''
 
-def add_model(col, args):
+
+def add_simple_model(col, name, language_name, native_language_name):
     mm = col.models
-    if args.deck:
-        model_name = _('Subtitles ({0})').format(args.deck)
-    else:
-        model_name = _('Subtitles')
-    m = mm.new(model_name)
-    fm = mm.newField(_('Timestamp'))
+    m = mm.new(name)
+
+    start_name = _('Start')
+    end_name = _('End')
+    fm = mm.newField(start_name)
     mm.addField(m, fm)
-    if args.language_name:
-        text_name = args.language_name
-    elif args.language:
-        text_name = _('Text ({0})').format(args.language)
-    else:
-        text_name = _('Text')
-    fm = mm.newField(text_name)
+    fm = mm.newField(end_name)
     mm.addField(m, fm)
-    fm = mm.newField(_('Native'))
+    fm = mm.newField(language_name)
     mm.addField(m, fm)
-    fm = mm.newField(_('Image'))
+    reading_name = _("Reading")
+    fm = mm.newField(reading_name)
     mm.addField(m, fm)
-    fm = mm.newField(_('Video'))
+    fm = mm.newField(native_language_name)
     mm.addField(m, fm)
-    fm = mm.newField(_('Audio'))
+    image_name = _('Image')
+    fm = mm.newField(image_name)
+    mm.addField(m, fm)
+    video_name = _('Video')
+    fm = mm.newField(video_name)
+    mm.addField(m, fm)
+    audio_name = _('Audio')
+    fm = mm.newField(audio_name)
     mm.addField(m, fm)
     fm = mm.newField(_('Literal'))
     mm.addField(m, fm)
     fm = mm.newField(_('Notes'))
     mm.addField(m, fm)
     t = mm.newTemplate(_('Watch'))
-    t['qfmt'] = '<div>{{' + _('Image') + '}}</div>\n{{' + _('Video') + '}}\n' \
-        + '<div class=small>{{' + _('Timestamp') + '}}</div>'
-    t['afmt'] = '{{' + _('Image') + '}}\n{{' + _('Audio') + '}}\n' + \
-        '<div>{{' + _('Text') + '}}</div>' + \
-        '<div class="native">{{' + _('Native') + '}}</div>' + \
-        '<div class="small">{{' + _('Timestamp') + '}}</div>'
+    # NB.: those things are five pairs of braces: double braces are
+    # escapes for single braces, so four of the five give double
+    # braces, what we want in the output. The last pair is used by
+    # unicode.format().
+    # The character between start and end is an n-dash.
+    t['qfmt'] = '''\
+{{{{{image}}}}}
+{{{{{video}}}}}
+<div class="small">{{{{{st}}}}}–{{{{{end}}}}}</div>
+'''.format(image=image_name, video=video_name, st=start_name, end=end_name)
+
+    t['afmt'] = '''\
+{{{{{image}}}}}
+{{{{{audio}}}}}
+<div>{{{{{text}}}}}</div>
+<div>{{{{furigana:{read}}}}}</div>
+<div>{{{{{native}}}}}</div>
+<div class="small">{{{{{st}}}}}–{{{{{end}}}}}</div>
+'''.format(image=image_name, audio=audio_name, text=language_name,
+           read=reading_name, native=native_language_name, st=start_name,
+           end=end_name)
+    # Arial is ugly.
+    if remove_arial:
+        m['css'] = m['css'].replace(
+            'font-family: arial;', '/* font-family: arial; */')
+    m['css'] += extra_styling
     mm.addTemplate(m, t)
     mm.add(m)
     return m
