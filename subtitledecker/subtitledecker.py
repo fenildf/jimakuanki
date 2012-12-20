@@ -54,6 +54,7 @@ class SubtitleDecker(object):
         self.deck_id = None
         self.subtitle_files = []
         self.subtitles = []
+        self.time_sub_index = 0
         self.video = None
         self.model_name = None
         self.language_name = None
@@ -125,7 +126,7 @@ class SubtitleDecker(object):
         if not self.subtitles:
             print ('No subtitles loaded')
             return
-        time_sub = self.subtitles[0]
+        time_sub = self.subtitles[self.time_sub_index]
         print('Write {} lines'.format(len(time_sub)))
         # Need to avoid code duplication.
         for sl in time_sub:
