@@ -1,0 +1,2 @@
+anki>=2
+pysubs>=0.2
