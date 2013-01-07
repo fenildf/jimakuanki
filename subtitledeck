@@ -13,6 +13,19 @@ Turn a video and sets of subtitles into an Anki2 deck.
 from subtitledecker import SubtitleDecker
 import argparse
 
+def setup_from_args(sd, args):
+    sd.out_file = sd.fix_path(args.output)
+        # print('Will write to "{}"'.format(sd.out_file))
+    sd.deck_name = args.deck
+    sd.deck_id = sd.dm.id(args.deck)
+    sd.model_name = 'Subtitles ({})'.format(sd.deck_name)
+    sd.language_name = args.language_name
+    sd.native_language_name = args.native_language_name
+    sd.subtitle_files = args.subtitles
+
+
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Turn videos and subtitles intto Anki2 decks..')
@@ -37,7 +50,7 @@ and Chinese).''')
                         help='Name of your native language.')
     args = parser.parse_args()
     sd = SubtitleDecker()
-    sd.set_from_args(args)
+    setup_from_args(sd, args)
     sd.add_model()
     sd.process()
     sd.export()

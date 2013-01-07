@@ -14,19 +14,23 @@ Turn a video and sets of subtitles into an Anki2 deck.
 """
 
 import os
+import pysubs
+import random
 import shutil
 import tempfile
-# NB. pysubs, not pysub
-import pysubs
 
-from anki.collection import _Collection
-from anki.db import DB
-from anki.exporting import AnkiPackageExporter
-from anki.notes import Note
-from anki.storage import _createDB
-from anki.lang import _
+
+from libanki.collection import _Collection
+from libanki.db import DB
+from libanki.exporting import AnkiPackageExporter
+from libanki.notes import Note
+from libanki.storage import _createDB
+from libanki.lang import _
 
 from .model import add_simple_model
+
+# How many times will we try to
+fudge_timing_max_frames = 10
 
 
 class SubtitleDecker(object):
@@ -57,24 +61,16 @@ class SubtitleDecker(object):
         self.time_sub_index = 0
         self.video = None
         self.model_name = None
-        self.language_name = None
-        self.native_language_name = None
+        self.language_name = 'Text'
+        self.native_language_name = 'Text (native)'
+        # Frame rate, that infamous number that is not quite 30.
+        self.fps = pysubs.misc.Time.NAMED_FPS['ntsc']
+        # We fudge the timing data a bit when there is a second
+        # subtitle starting on the same frame. Keep track of that.
+        self.start_frames_seen = []
         self.start_dir = os.getcwd()
         self.col = self.get_collection()
         self.dm = self.col.decks
-
-
-    def set_from_args(self, args):
-        self.out_file = self._fix_path(args.output)
-        print('Will write to "{}"'.format(self.out_file))
-        self.deck_name = args.deck
-        self.deck_id = self.dm.id(args.deck)
-        self.model_name = 'Subtitles ({})'.format(self.deck_name)
-        self.language_name = args.language_name
-        self.native_language_name = args.native_language_name
-        self.subtitle_files = args.subtitles
-        self._get_subtitles_from_files()
-
 
     def add_model(self):
         self.model = add_simple_model(
@@ -83,10 +79,34 @@ class SubtitleDecker(object):
         self.col.models.setCurrent(self.model)
         self.model['did'] = self.deck_id
 
-    def _fix_path(self, path):
+    def fix_path(self, path):
         if not os.path.isabs(path):
             return os.path.abspath(os.path.join(self.start_dir, path))
         return path
+
+    def _add_frames(self, time, frames):
+        """Add n frame length to a pysubs time."""
+        return pysubs.misc.Time(
+            fps=self.fps, frame=time.to_frame(fps=self.fps) + frames)
+
+    def _start_times(self, start_time):
+        """Yield a number of fudged start times."""
+        count = 0
+        while (count <= fudge_timing_max_frames):
+            yield self._add_frames(start_time, count)
+            count += 1
+
+    def _start_time_stamp(self, line):
+        """Return a value to use as the start time string."""
+        for st in self._start_times(line.start):
+            fr = st.to_frame(fps=self.fps)
+            if not fr in self.start_frames_seen:
+                self.start_frames_seen.append(fr)
+                return st.to_str('ass')
+        else:
+            # Don't shift too far (not more than 10 frames). Instead
+            # add a random number and number and hope for the best.
+            return st.to_str('ass') + str(random.random()).lstrip('0.')
 
     def get_collection(self):
         """
@@ -108,34 +128,36 @@ class SubtitleDecker(object):
         return col
 
     def _get_subtitles_from_files(self):
-        print('Subtitle files: {}'.format(self.subtitle_files))
-        print (len(self.subtitle_files))
         for sta in self.subtitle_files:
-            print ('get from {}'.format(sta))
-            sta = self._fix_path(sta)
-            print ('get from {}'.format(sta))
+            sta = self.fix_path(sta)
+            # The nested try is from the pysubs examples,
+            # https://github.com/tigr42/pysubs/blob/\
+            # master/examples/chapter_gen.py
             try:
                 subs = pysubs.load(sta)
             except pysubs.exceptions.EncodingDetectionError:
-                subs = pysubs.load(sta, self.default_sub_encoding)
+                try:
+                    subs = pysubs.load(sta, self.default_sub_encoding)
+                except UnicodeDecodeError:
+                    with open(sta, encoding=self.default_sub_encoding,
+                              errors="replace") as fp:
+                        subs = pysubs.SSAFile()
+                        subs.from_str(fp.read())
             self.subtitles.append(subs)
 
-
-
     def process(self):
+        self._get_subtitles_from_files()
         if not self.subtitles:
-            print ('No subtitles loaded')
+            print('No subtitles loaded')
             return
         time_sub = self.subtitles[self.time_sub_index]
-        print('Write {} lines'.format(len(time_sub)))
         # Need to avoid code duplication.
         for sl in time_sub:
             note = Note(self.col, model=self.model)
-            note['Start'] = str(sl.start)
-            note['End'] = str(sl.end)
+            note['Start'] = self._start_time_stamp(sl)
+            note['End'] = sl.end.to_str('ass')
             note[self.language_name] = sl.plaintext
             self.col.addNote(note)
-
 
     def export(self):
         ape = AnkiPackageExporter(self.col)

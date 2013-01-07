@@ -12,7 +12,7 @@
 """
 Create a simple static model for the subtitle deck.
 """
-from anki.lang import _
+from libanki.lang import _
 
 remove_arial = True
 extra_styling = '''
