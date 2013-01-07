@@ -1,0 +1,2 @@
+libanki>=2
+pysubs>=0.1.1
