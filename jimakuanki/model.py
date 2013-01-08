@@ -54,7 +54,7 @@ def add_simple_model(col, name, language_name, native_language_name):
     # NB.: those things are five pairs of braces: double braces are
     # escapes for single braces, so four of the five give double
     # braces, what we want in the output. The last pair is used by
-    # unicode.format().
+    # str.format().
     # The character between start and end is an n-dash.
     t['qfmt'] = '''\
 {{{{{image}}}}}

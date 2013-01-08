@@ -6,4 +6,4 @@
 # License: GNU AGPL, version 3 or later;
 # http://www.gnu.org/copyleft/agpl.html
 
-from .subtitledecker import SubtitleDecker
+from .jimakuanki import JimakuAnki

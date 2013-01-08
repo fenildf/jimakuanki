@@ -33,7 +33,7 @@ from .model import add_simple_model
 fudge_timing_max_frames = 10
 
 
-class SubtitleDecker(object):
+class JimakuAnki(object):
     """
     Representation of an Anki deck containing subtitles.
 
@@ -42,7 +42,7 @@ class SubtitleDecker(object):
     with a deck of flashcards of video clips and subtitles.
 
     Workflow:
-    * Create SubtitleDecker object
+    * Create JimakuAnki object
     * Add a video file
     * Add subtitles, either as extra files or pointing to subtitles
       from the video files.
