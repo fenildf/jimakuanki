@@ -14,7 +14,7 @@ Turn a video and sets of subtitles into an Anki2 deck.
 """
 
 import os
-# import pysubs
+import pysubs  # N.B.: This has to be the py27compat branch.
 import random
 import shutil
 import tempfile
