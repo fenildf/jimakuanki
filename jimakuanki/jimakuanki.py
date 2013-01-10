@@ -51,8 +51,8 @@ class JimakuAnki(object):
     """
     def __init__(self):
         self.default_sub_encoding = 'utf-8'
-        self.col_path = ''
-        self.col_name = 'collection'
+        self.col_path = u''
+        self.col_name = u'collection'
         self.model = None
         self.out_file = ''
         self.deck_id = None
@@ -61,8 +61,8 @@ class JimakuAnki(object):
         self.time_sub_index = 0
         self.video = None
         self.model_name = None
-        self.language_name = 'Text'
-        self.native_language_name = 'Text (native)'
+        self.language_name = u'Expression'
+        self.native_language_name = u'Meaning'
         # Frame rate, that infamous number that is not quite 30.
         self.fps = pysubs.misc.Time.NAMED_FPS['ntsc']
         # We fudge the timing data a bit when there is a second

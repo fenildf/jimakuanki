@@ -15,12 +15,12 @@ import argparse
 
 def setup_from_args(ma, args):
     ma.out_file = ma.fix_path(args.output)
-        # print('Will write to "{}"'.format(ma.out_file))
-    ma.deck_name = args.deck
     ma.deck_id = ma.dm.id(args.deck)
-    ma.model_name = 'Subtitles ({})'.format(ma.deck_name)
-    ma.language_name = args.language_name
-    ma.native_language_name = args.native_language_name
+    ma.model_name = 'Subtitles ({})'.format(args.deck)
+    if args.language_name:
+        ma.language_name = args.language_name
+    if args.native_language_name:
+        ma.native_language_name = args.native_language_name
     ma.subtitle_files = args.subtitles
 
 
