@@ -40,3 +40,6 @@ nosetests.xml
 *~
 
 *.bak
+
+# My test data
+test-data
