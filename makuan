@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- mode: python ; coding: utf-8 -*-
 #
-# Copyright © 2012 Roland Sieker <ospalh@gmail.com>
+# Copyright © 2012–2013 Roland Sieker <ospalh@gmail.com>
 #
 # License: GNU AGPL, version 3 or later;
 # http://www.gnu.org/copyleft/agpl.html
@@ -10,7 +10,7 @@
 Turn a video and sets of subtitles into an Anki2 deck.
 """
 
-from jimakuanki import JimakuAnki
+from jimakuanki import JimakuAnki, dynamic_model
 import argparse
 
 def setup_from_args(ma, args):
@@ -51,7 +51,7 @@ and Chinese).''')
     args = parser.parse_args()
     ma = JimakuAnki()
     setup_from_args(ma, args)
-    ma.add_model()
+    ma.model = dynamic_model(ma)
     ma.process()
     ma.export()
     ma.cleanup()

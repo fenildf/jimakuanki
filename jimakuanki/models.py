@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright © 2012 : Roland Sieker <ospalh@gmail.com>
+# Copyright © 20122–2013 : Roland Sieker <ospalh@gmail.com>
 
 # Provenance: Based on anki.stdmodels.addBasicModel
 # by Damien Elmes <anki@ichi2.net>
@@ -20,7 +20,7 @@ extra_styling = '''
 '''
 
 
-def add_simple_model(col, name, language_name, native_language_name):
+def simple_model(col, name, language_name, native_language_name):
     mm = col.models
     m = mm.new(name or _('Subtitles'))
 
@@ -82,7 +82,7 @@ def add_simple_model(col, name, language_name, native_language_name):
     return m
 
 
-def add_dynamic_model(makuan):
+def dynamic_model(makuan):
     mm = makuan.col.models
     m = mm.new(makuan.model_name or _('Subtitles'))
 
@@ -98,8 +98,11 @@ def add_dynamic_model(makuan):
         reading_name = _(u'Reading')
         fm = mm.newField(reading_name)
         mm.addField(m, fm)
-    if makuan.translated_subtitles:
-        fm = mm.newField(makuan.native_language_name or _(u'Meaning'))
+    for i, st in  enumerate(makuan.other_subtitles, 1):
+        fn = makuan.native_language_name or _(u'Meaning')
+        if i > 1:
+            fn += ' ' + str(i)
+        fm = mm.newField(fn)
         mm.addField(m, fm)
     image_name = _(u'Image')
     fm = mm.newField(image_name)

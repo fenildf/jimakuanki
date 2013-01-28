@@ -7,3 +7,4 @@
 # http://www.gnu.org/copyleft/agpl.html
 
 from .jimakuanki import JimakuAnki
+from models import dynamic_model, simple_model

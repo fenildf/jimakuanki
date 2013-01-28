@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 #
-# Copyright © 2012 Roland Sieker <ospalh@gmail.com>
+# Copyright © 2012–2013 Roland Sieker <ospalh@gmail.com>
 #
 # Provenance: Parts of the code were written by Damien Elmes, as
 # * anki.storage.Collection()
