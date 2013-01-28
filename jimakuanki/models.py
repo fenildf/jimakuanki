@@ -94,11 +94,13 @@ def add_dynamic_model(makuan):
     mm.addField(m, fm)
     fm = mm.newField(makuan.language_name)
     mm.addField(m, fm)
-    reading_name = _(u'Reading')
-    fm = mm.newField(reading_name)
-    mm.addField(m, fm)
-    fm = mm.newField(makuan.native_language_name or _(u'Meaning'))
-    mm.addField(m, fm)
+    if makuan.use_reading:
+        reading_name = _(u'Reading')
+        fm = mm.newField(reading_name)
+        mm.addField(m, fm)
+    if makuan.translated_subtitles:
+        fm = mm.newField(makuan.native_language_name or _(u'Meaning'))
+        mm.addField(m, fm)
     image_name = _(u'Image')
     fm = mm.newField(image_name)
     mm.addField(m, fm)
@@ -131,9 +133,9 @@ def add_dynamic_model(makuan):
 <div>{{{{furigana:{read}}}}}</div>
 <div>{{{{{native}}}}}</div>
 <div class="small">{{{{{st}}}}}–{{{{{end}}}}}</div>
-'''.format(image=image_name, audio=audio_name, text=language_name,
-           read=reading_name, native=native_language_name, st=start_name,
-           end=end_name)
+'''.format(image=image_name, audio=audio_name, text=makuan.language_name,
+           read=reading_name, native=makuan.native_language_name,
+           st=start_name, end=end_name)
     # Arial is ugly.
     if remove_arial:
         m['css'] = m['css'].replace(

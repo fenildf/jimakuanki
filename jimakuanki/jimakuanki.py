@@ -29,8 +29,8 @@ from libanki.lang import _
 
 from . import models
 
-# How many times will we try to
-fudge_timing_max_frames = 10
+# How many ms will we shift to make the time unique
+fudge_timing_max_ms = 500
 
 
 class JimakuAnki(object):
@@ -49,6 +49,7 @@ class JimakuAnki(object):
     * Set up other parameters such as languages, deck and output file names.
     *
     """
+
     def __init__(self):
         self.default_sub_encoding = 'utf-8'
         self.col_path = u''
@@ -57,24 +58,29 @@ class JimakuAnki(object):
         self.out_file = ''
         self.deck_id = None
         self.subtitle_files = []
-        self.subtitles = []
-        # Always use the first (0th) subtitle for timing.
-        # self.time_sub_index = 0
+        self.index_subtitles_index = 0
+        self.index_subtitles = None
+        self.other_subtitles = []
         self.matched_subtitles = []
         self.leading_lines = 2
         self.trailing_lines = 2
         # Should we add local translations of leading and trailing
         # lines as well?
-        self.lead_trail_local = True
+        self.lead_trail_translated = True
         self.video = None
         self.model_name = None
+        self.use_video = True
+        self.normalize = True
+        self.normalize_video = True
+        self.use_reading = True
+        self.automatic_reading = False
         self.language_name = u'Expression'
         self.native_language_name = u'Meaning'
         # Frame rate, that infamous number that is not quite 30.
         self.fps = pysubs.misc.Time.NAMED_FPS['ntsc']
         # We fudge the timing data a bit when there is a second
         # subtitle starting on the same frame. Keep track of that.
-        self.start_frames_seen = []
+        self.start_times_seen = []
         self.start_dir = os.getcwd()
         self.col = self.get_collection()
         self.dm = self.col.decks
@@ -96,27 +102,22 @@ class JimakuAnki(object):
             return os.path.abspath(os.path.join(self.start_dir, path))
         return path
 
-    def _add_frames(self, time, frames):
-        """Add n frame length to a pysubs time."""
-        return pysubs.misc.Time(
-            fps=self.fps, frame=time.to_frame(fps=self.fps) + frames)
-
     def _start_times(self, start_time):
         """Yield a number of fudged start times."""
         count = 0
-        while (count <= fudge_timing_max_frames):
-            yield self._add_frames(start_time, count)
+        st_ms = int(start_time)
+        while (count <= fudge_timing_max_ms):
+            yield start_time + pysubs.misc.Time(ms=count), st_ms + count
             count += 1
 
     def _start_time_stamp(self, line):
         """Return a value to use as the start time string."""
-        for st in self._start_times(line.start):
-            fr = st.to_frame(fps=self.fps)
-            if not fr in self.start_frames_seen:
-                self.start_frames_seen.append(fr)
+        for (st, st_ms) in self._start_times(line.start):
+            if not st_ms in self.start_times_seen:
+                self.start_times_seen.append(st_ms)
                 return st.to_str('ass')
         else:
-            # Don't shift too far (not more than 10 frames). Instead
+            # Don't shift too far (not more than 500ms). Instead
             # add a random number and number and hope for the best.
             return st.to_str('ass') + str(random.random()).lstrip('0.')
 
@@ -139,41 +140,75 @@ class JimakuAnki(object):
         col.lock()
         return col
 
-    def _get_subtitles_from_files(self):
-        for sta in self.subtitle_files:
-            sta = self.fix_path(sta)
-            # The nested try is from the pysubs examples,
-            # https://github.com/tigr42/pysubs/blob/\
-            # master/examples/chapter_gen.py
+    def _get_subtitles_from_single_file(self, fn):
+        sta = self.fix_path(fn)
+        # The nested try is from the pysubs examples,
+        # https://github.com/tigr42/pysubs/blob/
+        # master/examples/chapter_gen.py
+        try:
+            return pysubs.load(sta)
+        except pysubs.exceptions.EncodingDetectionError:
             try:
-                subs = pysubs.load(sta)
-            except pysubs.exceptions.EncodingDetectionError:
-                try:
-                    subs = pysubs.load(sta, self.default_sub_encoding)
-                except UnicodeDecodeError:
-                    with open(sta, encoding=self.default_sub_encoding,
-                              errors="replace") as fp:
-                        subs = pysubs.SSAFile()
-                        subs.from_str(fp.read())
-            self.subtitles.append(subs)
+                return pysubs.load(sta, self.default_sub_encoding)
+            except UnicodeDecodeError:
+                with open(sta, encoding=self.default_sub_encoding,
+                          errors="replace") as fp:
+                    subs = pysubs.SSAFile()
+                    subs.from_str(fp.read())
+                return subs
 
-    def _arrange_titles():
-        pass
+    def _get_subtitles_from_files(self):
+        for i, stf in enumerate(self.subtitle_files):
+            if i == self.index_subtitles_index:
+                # No try. Crash-and-burn when we can't load the key subtitles.
+                self.index_subtitles = \
+                    self._get_subtitles_from_single_file(stf)
+            else:
+                try:
+                    self.other_subtitles.append(
+                        self._get_subtitles_from_single_file(stf))
+                except:
+                    # We can deal with dropping this subtitles.
+                    print(u"Can't load subtitles from file {0}.".format(stf))
+                    pass
+
+    def _match_titles(self):
+        """
+        Match the times of the subtiles
+
+        This goes through the collection and matches other subtitles
+        to the index subtitles, adding them to self.matched_subtitles
+        as a list of tuples.
+        """
+        for sl in self.index_subtitles:
+            line_dict = {
+                'start': self._start_time_stamp(sl),
+                'end': sl.end.to_str('ass'),
+                self.language_name: sl.plaintext}
+            for st in self.other_subtitles:
+                pass
+            self.matched_subtitles.append(line_dict)
+
+    def _fill_note(self, note, data):
+        for k, v in data.items():
+            try:
+                note[k] = v
+            except KeyError:
+                pass
+
+    def _fill_deck(self):
+        for dct in self.matched_subtitles:
+            note = Note(self.col, model=self.model)
+            self._fill_note(note, dct)
+            self.col.addNote(note)
 
     def process(self):
+        """
+        Do the main processing of the subtitles.
+        """
         self._get_subtitles_from_files()
-        if not self.subtitles:
-            print('No subtitles loaded')
-            return
-        time_sub = self.subtitles[self.time_sub_index]
-
-        # Need to avoid code duplication.
-        for sl in time_sub:
-            note = Note(self.col, model=self.model)
-            note['Start'] = self._start_time_stamp(sl)
-            note['End'] = sl.end.to_str('ass')
-            note[self.language_name] = sl.plaintext
-            self.col.addNote(note)
+        self._match_titles()
+        self._fill_deck()
 
     def export(self):
         ape = AnkiPackageExporter(self.col)
