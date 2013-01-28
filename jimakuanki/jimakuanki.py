@@ -86,14 +86,14 @@ class JimakuAnki(object):
         self.dm = self.col.decks
 
     def add_simple_model(self):
-        self.model = models.add_simple_model(
+        self.model = models.simple_model(
             self.col, self.model_name, self.language_name,
             self.native_language_name)
         self.col.models.setCurrent(self.model)
         self.model['did'] = self.deck_id
 
     def add_dynamic_model(self):
-        self.model = models.add_dynamic_model(self)
+        self.model = models.dynamic_model(self)
         self.col.models.setCurrent(self.model)
         self.model['did'] = self.deck_id
 
@@ -182,8 +182,8 @@ class JimakuAnki(object):
         """
         for sl in self.index_subtitles:
             line_dict = {
-                'start': self._start_time_stamp(sl),
-                'end': sl.end.to_str('ass'),
+                'Start': self._start_time_stamp(sl),
+                'End': sl.end.to_str('ass'),
                 self.language_name: sl.plaintext}
             for st in self.other_subtitles:
                 pass

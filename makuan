@@ -10,7 +10,7 @@
 Turn a video and sets of subtitles into an Anki2 deck.
 """
 
-from jimakuanki import JimakuAnki, dynamic_model
+from jimakuanki import JimakuAnki
 import argparse
 
 def setup_from_args(ma, args):
@@ -51,7 +51,7 @@ and Chinese).''')
     args = parser.parse_args()
     ma = JimakuAnki()
     setup_from_args(ma, args)
-    ma.model = dynamic_model(ma)
+    ma.add_dynamic_model()
     ma.process()
     ma.export()
     ma.cleanup()
