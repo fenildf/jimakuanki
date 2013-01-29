@@ -85,21 +85,22 @@ def simple_model(col, name, language_name, native_language_name):
 def dynamic_model(makuan):
     mm = makuan.col.models
     m = mm.new(makuan.model_name or _('Subtitles'))
-
     start_name = _('Start')
     end_name = _('End')
     fm = mm.newField(start_name)
     mm.addField(m, fm)
     fm = mm.newField(end_name)
     mm.addField(m, fm)
-    fm = mm.newField(makuan.language_name)
+    fm = mm.newField(makuan.language_names[0])
     mm.addField(m, fm)
     if makuan.use_reading:
         reading_name = _(u'Reading')
         fm = mm.newField(reading_name)
         mm.addField(m, fm)
-    for i, st in  enumerate(makuan.other_subtitles, 1):
-        fn = makuan.native_language_name or _(u'Meaning')
+    else:
+        reading_name = None
+    for i, st in  enumerate(makuan.subtitle_files[1:], 1):
+        fn = makuan.language_names[i] or _(u'Meaning')
         if i > 1:
             fn += ' ' + str(i)
         fm = mm.newField(fn)
@@ -136,8 +137,8 @@ def dynamic_model(makuan):
 <div>{{{{furigana:{read}}}}}</div>
 <div>{{{{{native}}}}}</div>
 <div class="small">{{{{{st}}}}}–{{{{{end}}}}}</div>
-'''.format(image=image_name, audio=audio_name, text=makuan.language_name,
-           read=reading_name, native=makuan.native_language_name,
+'''.format(image=image_name, audio=audio_name, text=makuan.language_names[0],
+           read=reading_name, native=(makuan.language_names[1] or 'Meaning'),
            st=start_name, end=end_name)
     # Arial is ugly.
     if remove_arial:

@@ -19,7 +19,6 @@ import random
 import shutil
 import tempfile
 
-
 from libanki.collection import _Collection
 from libanki.db import DB
 from libanki.exporting import AnkiPackageExporter
@@ -52,8 +51,6 @@ set up the model.
 leading_format = u'Leading {field}{num}'
 trailing_format = u'Trailing {field}{num}'
 lead_trail_num_dict = {1: u'', 2: u' 2', 3: u' 3', 4: u' 4'}
-
-
 
 
 class JimakuAnki(object):
@@ -94,7 +91,9 @@ class JimakuAnki(object):
         self.use_video = True
         self.normalize = True
         self.normalize_video = True
-        self.use_reading = True
+        self.japanese = False
+        self.chinese = False
+        self.use_reading = False
         self.automatic_reading = False
         self.language_names = [u'Expression', u'Meaning']
         self.language_codes = [u'ja', u'en']
@@ -188,7 +187,11 @@ class JimakuAnki(object):
                 # No try. Crash-and-burn when we can't load the key subtitles.
                 ist = sorted(self._get_subtitles_from_single_file(stf))
                 # Put each subtile line into a list, like that we can
-                # glom the other subtile lines onto these.
+                # stick the other subtile lines onto these.
+                # Or rather ...
+                # TODO
+                # Use a dict here.
+                # (But not tonight.)
                 self.index_subtitles = [ [sti,] for sti in ist]
             else:
                 try:
@@ -207,6 +210,9 @@ class JimakuAnki(object):
                     print(u"Can't load subtitles from file {0}.".format(stf))
                     pass
 
+    def _add_line_to_subtiles(self, st_line, st_name):
+        pass
+
     def _match_titles(self):
         """
         Match the times of the subtiles
@@ -218,12 +224,13 @@ class JimakuAnki(object):
         # Go through the _other_ subtitles first.
         for st in self.other_subtitles:
             for ol in st:
+                st_name = "Fixme, get name"
                 self._add_line_to_subtiles(ol, st_name)
                 # We should
                 pass
 
     def _fill_note(self, note, data):
-        for k, v in data.items():
+        for itms in data:
             try:
                 note[k] = v
             except KeyError:

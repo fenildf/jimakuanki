@@ -17,13 +17,15 @@ def setup_from_args(ma, args):
     ma.out_file = ma.fix_path(args.output)
     ma.deck_id = ma.dm.id(args.deck)
     ma.model_name = 'Subtitles ({})'.format(args.deck)
-    if args.language_name:
-        ma.language_name = args.language_name
-    if args.native_language_name:
-        ma.native_language_name = args.native_language_name
+    if args.language_names:
+        ma.language_names = args.language_names
+    if args.Japanese:
+        ma.japanese = True
+        ma.use_readings = True
+    if args.Chinese:
+        ma.chinese = True
+        ma.use_readings = True
     ma.subtitle_files = args.subtitles
-
-
 
 
 if __name__ == '__main__':
@@ -37,16 +39,14 @@ if __name__ == '__main__':
                         help='Name of the output file')
     parser.add_argument('-s', '--subtitles', type=str, nargs="+",
                         help='Subtitle files to use.')
-    parser.add_argument('-c', '--language-codes', type=str, nargs="+",
-                        help='''Codes for the languages. When using more than \
- one, keep these in line with the subtitle definitions.''')
     parser.add_argument('-l', '--language-names', type=str, nargs="+",
                         help='''Names of the languages.  When using more than \
  one, keep these in line with the subtitle definitions.''')
     parser.add_argument('-j', '--Japanese', action='store_true',
                         help='''Special treatment for Japanese.''')
     parser.add_argument('-z', '--Chinese', action='store_true',
-                        help='''Special treatment for Chinese.''')
+                        help=u'''Special treatment for Chinese. \
+(Mnemonic: z as in Zhōngwén/Zhongwen/zh)''')
     args = parser.parse_args()
     ma = JimakuAnki()
     setup_from_args(ma, args)
