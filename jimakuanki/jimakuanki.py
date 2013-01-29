@@ -33,6 +33,29 @@ from . import models
 fudge_timing_max_ms = 500
 
 
+standard_fields = {'start': u'Start', 'end': u'End', 'exp': u'Expression',
+                   'mean': u'Meaning', 'read': u'Reading',
+                   'img': u'Image', 'vid': u'Video', 'aud': u'Audio'}
+"""
+A few standard fields.
+
+The programm expects a few standard fields. Define the names
+here. Override the content to taste. Later these strings are used to
+set up the model.
+"""
+
+# Set up how leading and trailing field names are generated. For
+# example, the 2nd leadig Expression field gets the field name
+# leading_format.format(field=standard_fields['exp'],
+# num=lead_trail_num_dict[2]), which be default evaluates to u'Leading
+# Expression 2'.
+leading_format = u'Leading {field}{num}'
+trailing_format = u'Trailing {field}{num}'
+lead_trail_num_dict = {1: u'', 2: u' 2', 3: u' 3', 4: u' 4'}
+
+
+
+
 class JimakuAnki(object):
     """
     Representation of an Anki deck containing subtitles.
@@ -61,7 +84,6 @@ class JimakuAnki(object):
         self.index_subtitles_index = 0
         self.index_subtitles = None
         self.other_subtitles = []
-        self.matched_subtitles = []
         self.leading_lines = 2
         self.trailing_lines = 2
         # Should we add local translations of leading and trailing
@@ -74,12 +96,14 @@ class JimakuAnki(object):
         self.normalize_video = True
         self.use_reading = True
         self.automatic_reading = False
-        self.language_name = u'Expression'
-        self.native_language_name = u'Meaning'
+        self.language_names = [u'Expression', u'Meaning']
+        self.language_codes = [u'ja', u'en']
+        self.field_list = [u'Start', u'End', u'Expression', u'Meaning',
+                           u'Reading', u'Image', u'Video', u'Audio']
         # Frame rate, that infamous number that is not quite 30.
         self.fps = pysubs.misc.Time.NAMED_FPS['ntsc']
         # We fudge the timing data a bit when there is a second
-        # subtitle starting on the same frame. Keep track of that.
+        # subtitle starting at the same time. Keep track of that.
         self.start_times_seen = []
         self.start_dir = os.getcwd()
         self.col = self.get_collection()
@@ -151,22 +175,33 @@ class JimakuAnki(object):
             try:
                 return pysubs.load(sta, self.default_sub_encoding)
             except UnicodeDecodeError:
-                with open(sta, encoding=self.default_sub_encoding,
-                          errors="replace") as fp:
+                with open(sta) as fp:
                     subs = pysubs.SSAFile()
-                    subs.from_str(fp.read())
+                    subs.from_str(unicode(
+                            fp.read(), encoding=self.default_sub_encoding,
+                            errors="replace"))
                 return subs
 
     def _get_subtitles_from_files(self):
         for i, stf in enumerate(self.subtitle_files):
             if i == self.index_subtitles_index:
                 # No try. Crash-and-burn when we can't load the key subtitles.
-                self.index_subtitles = \
-                    self._get_subtitles_from_single_file(stf)
+                ist = sorted(self._get_subtitles_from_single_file(stf))
+                # Put each subtile line into a list, like that we can
+                # glom the other subtile lines onto these.
+                self.index_subtitles = [ [sti,] for sti in ist]
             else:
                 try:
+                    # We sort the subtitles (by start time.)  (Here
+                    # and above.) Typically they are sorted, but i
+                    # guess it is not guaranteed. Sorting turns the
+                    # 'SSAFile' object into a list, but i guess the
+                    # important difference is that you can just save
+                    # SSAFiles again, which we don't want to
+                    # do. Knowing it is sorted makes it easier to
+                    # match the subtitles later.
                     self.other_subtitles.append(
-                        self._get_subtitles_from_single_file(stf))
+                        sorted(self._get_subtitles_from_single_file(stf)))
                 except:
                     # We can deal with dropping this subtitles.
                     print(u"Can't load subtitles from file {0}.".format(stf))
@@ -177,17 +212,15 @@ class JimakuAnki(object):
         Match the times of the subtiles
 
         This goes through the collection and matches other subtitles
-        to the index subtitles, adding them to self.matched_subtitles
-        as a list of tuples.
+        to the index subtitles, adding them to self.index_subtitles
+        as ...
         """
-        for sl in self.index_subtitles:
-            line_dict = {
-                'Start': self._start_time_stamp(sl),
-                'End': sl.end.to_str('ass'),
-                self.language_name: sl.plaintext}
-            for st in self.other_subtitles:
+        # Go through the _other_ subtitles first.
+        for st in self.other_subtitles:
+            for ol in st:
+                self._add_line_to_subtiles(ol, st_name)
+                # We should
                 pass
-            self.matched_subtitles.append(line_dict)
 
     def _fill_note(self, note, data):
         for k, v in data.items():
@@ -197,7 +230,7 @@ class JimakuAnki(object):
                 pass
 
     def _fill_deck(self):
-        for dct in self.matched_subtitles:
+        for dct in self.index_subtitles:
             note = Note(self.col, model=self.model)
             self._fill_note(note, dct)
             self.col.addNote(note)
