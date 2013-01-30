@@ -99,7 +99,7 @@ def dynamic_model(makuan):
         mm.addField(m, fm)
     else:
         reading_name = None
-    for i, st in  enumerate(makuan.subtitle_files[1:], 1):
+    for i, st in enumerate(makuan.subtitle_files[1:], 1):
         fn = makuan.language_names[i] or _(u'Meaning')
         if i > 1:
             fn += ' ' + str(i)

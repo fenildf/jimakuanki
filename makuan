@@ -10,13 +10,17 @@
 Turn a video and sets of subtitles into an Anki2 deck.
 """
 
-from jimakuanki import JimakuAnki
 import argparse
+
+from libanki.lang import _
+
+from jimakuanki import JimakuAnki
+
 
 def setup_from_args(ma, args):
     ma.out_file = ma.fix_path(args.output)
     ma.deck_id = ma.dm.id(args.deck)
-    ma.model_name = 'Subtitles ({})'.format(args.deck)
+    ma.model_name = _(u'Subtitles ({})').format(args.deck)
     if args.language_names:
         ma.language_names = args.language_names
     if args.Japanese:
@@ -30,23 +34,23 @@ def setup_from_args(ma, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Turn videos and subtitles into Anki2 decks..')
+        description=_(u'Turn videos and subtitles into Anki2 decks..'))
     parser.add_argument('-i', '--video', type=str, default='video.avi',
-                        help='Video file input')
+                        help=_(u'Video file input'))
     parser.add_argument('-d', '--deck', type=str, default='Video deck',
-                        help='Name of the deck inside the outputfile')
+                        help=_(u'Name of the deck inside the outputfile'))
     parser.add_argument('-o', '--output', type=str, default='video_deck.apkg',
-                        help='Name of the output file')
+                        help=_(u'Name of the output file'))
     parser.add_argument('-s', '--subtitles', type=str, nargs="+",
-                        help='Subtitle files to use.')
+                        help=_(u'Subtitle files to use.'))
     parser.add_argument('-l', '--language-names', type=str, nargs="+",
-                        help='''Names of the languages.  When using more than \
- one, keep these in line with the subtitle definitions.''')
+                        help=_(u'''Names of the languages.  When using more \
+than one, keep these in line with the subtitle definitions.'''))
     parser.add_argument('-j', '--Japanese', action='store_true',
-                        help='''Special treatment for Japanese.''')
+                        help=_(u'''Special treatment for Japanese.'''))
     parser.add_argument('-z', '--Chinese', action='store_true',
-                        help=u'''Special treatment for Chinese. \
-(Mnemonic: z as in Zhōngwén/Zhongwen/zh)''')
+                        help=_(u'''Special treatment for Chinese. \
+(Mnemonic: z as in Zhōngwén/Zhongwen/zh)'''))
     args = parser.parse_args()
     ma = JimakuAnki()
     setup_from_args(ma, args)

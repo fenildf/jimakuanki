@@ -32,9 +32,9 @@ from . import models
 fudge_timing_max_ms = 500
 
 
-standard_fields = {'start': u'Start', 'end': u'End', 'exp': u'Expression',
-                   'mean': u'Meaning', 'read': u'Reading',
-                   'img': u'Image', 'vid': u'Video', 'aud': u'Audio'}
+standard_fields = {'start': _(u'Start'), 'end': _(u'End'), 'exp': _(u'Expression'),
+                   'mean': _(u'Meaning'), 'read': _(u'Reading'),
+                   'img': _(u'Image'), 'vid': _(u'Video'), 'aud': _(u'Audio')}
 """
 A few standard fields.
 
@@ -46,11 +46,11 @@ set up the model.
 # Set up how leading and trailing field names are generated. For
 # example, the 2nd leadig Expression field gets the field name
 # leading_format.format(field=standard_fields['exp'],
-# num=lead_trail_num_dict[2]), which be default evaluates to u'Leading
-# Expression 2'.
-leading_format = u'Leading {field}{num}'
-trailing_format = u'Trailing {field}{num}'
-lead_trail_num_dict = {1: u'', 2: u' 2', 3: u' 3', 4: u' 4'}
+# num=lead_trail_num_dict[2]), which be default evaluates to _(u'Leading
+# Expression 2').
+leading_format = _(u'Leading {field}{num}')
+trailing_format = _(u'Trailing {field}{num}')
+lead_trail_num_dict = {1: u'', 2: _(u' 2'), 3: _(u' 3'), 4: _(u' 4')}
 
 
 class JimakuAnki(object):
@@ -192,7 +192,7 @@ class JimakuAnki(object):
                 # TODO
                 # Use a dict here.
                 # (But not tonight.)
-                self.index_subtitles = [ [sti,] for sti in ist]
+                self.index_subtitles = [ [sti, ] for sti in ist]
             else:
                 try:
                     # We sort the subtitles (by start time.)  (Here
