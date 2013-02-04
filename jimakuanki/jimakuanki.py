@@ -31,10 +31,10 @@ from . import models
 # How many ms will we shift to make the time unique
 fudge_timing_max_ms = 500
 
-
-standard_fields = {'start': _(u'Start'), 'end': _(u'End'), 'exp': _(u'Expression'),
-                   'mean': _(u'Meaning'), 'read': _(u'Reading'),
-                   'img': _(u'Image'), 'vid': _(u'Video'), 'aud': _(u'Audio')}
+standard_fields = {
+    'start': _(u'Start'), 'end': _(u'End'), 'exp': _(u'Expression'),
+    'mean': _(u'Meaning'), 'read': _(u'Reading'), 'img': _(u'Image'),
+    'vid': _(u'Video'), 'aud': _(u'Audio')}
 """
 A few standard fields.
 
@@ -185,14 +185,19 @@ class JimakuAnki(object):
         for i, stf in enumerate(self.subtitle_files):
             if i == self.index_subtitles_index:
                 # No try. Crash-and-burn when we can't load the key subtitles.
-                ist = sorted(self._get_subtitles_from_single_file(stf))
-                # Put each subtile line into a list, like that we can
-                # stick the other subtile lines onto these.
-                # Or rather ...
-                # TODO
-                # Use a dict here.
-                # (But not tonight.)
-                self.index_subtitles = [ [sti, ] for sti in ist]
+                for i_line in sorted(self._get_subtitles_from_single_file(stf)):
+                    line_dict = {}
+                    # We always have start end end.
+                    line_dict['start'] = self._start_time_stamp(i_line.start)
+                    line_dict['end'] = i_line.end
+                    line_dict[]
+                    # Put each subtile line into a list, like that we can
+                    # stick the other subtile lines onto these.
+                    # Or rather ...
+                    # TODO
+                    # Use a dict here.
+                    # (But not tonight.)
+                    self.index_subtitles.append(lin_dict)
             else:
                 try:
                     # We sort the subtitles (by start time.)  (Here
