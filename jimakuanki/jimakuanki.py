@@ -13,6 +13,7 @@
 Turn a video and sets of subtitles into an Anki2 deck.
 """
 
+import bisect
 import os
 import pysubs  # N.B.: This has to be the py27compat branch.
 import random
@@ -79,7 +80,7 @@ class JimakuAnki(object):
         self.deck_id = None
         self.subtitle_files = []
         self.index_subtitles_index = 0
-        self.index_subtitles = None
+        self.master_subtitles = None
         self.other_subtitles = []
         self.leading_lines = 2
         self.trailing_lines = 2
@@ -104,6 +105,9 @@ class JimakuAnki(object):
         # We fudge the timing data a bit when there is a second
         # subtitle starting at the same time. Keep track of that.
         self.start_times_seen = []
+        # Keep track of the longest title. With this searching of
+        # matching titles becoms quicker.
+        self.longest_title = pysubs.misc.Time()
         self.start_dir = os.getcwd()
         self.col = self.get_collection()
         self.dm = self.col.decks
@@ -141,7 +145,7 @@ class JimakuAnki(object):
                 return st.to_str('ass')
         else:
             # Don't shift too far (not more than 500ms). Instead
-            # add a random number and number and hope for the best.
+            # add a random number and hope for the best.
             return st.to_str('ass') + str(random.random()).lstrip('0.')
 
     def get_collection(self):
@@ -184,20 +188,19 @@ class JimakuAnki(object):
     def _get_subtitles_from_files(self):
         for i, stf in enumerate(self.subtitle_files):
             if i == self.index_subtitles_index:
-                # No try. Crash-and-burn when we can't load the key subtitles.
-                for i_line in sorted(self._get_subtitles_from_single_file(stf)):
+                # No try. Crash-and-burn if we can't load the key subtitles.
+                for i_line in sorted(self._get_subtitles_from_single_file(
+                        stf)):
                     line_dict = {}
                     # We always have start end end.
                     line_dict['start'] = self._start_time_stamp(i_line.start)
                     line_dict['end'] = i_line.end
-                    line_dict[]
-                    # Put each subtile line into a list, like that we can
-                    # stick the other subtile lines onto these.
-                    # Or rather ...
-                    # TODO
-                    # Use a dict here.
-                    # (But not tonight.)
-                    self.index_subtitles.append(lin_dict)
+                    line_dict['length'] = line_dict['end'] - line_dict['start']
+                    if i_line.text:
+                        line_dict['expr'] = i_line.plaintext
+                        self.master_subtitles.append(line_dict)
+                        if line_dict['length'] > self.longest_title:
+                            self.longest_title = line_dict['length']
             else:
                 try:
                     # We sort the subtitles (by start time.)  (Here
@@ -208,14 +211,63 @@ class JimakuAnki(object):
                     # SSAFiles again, which we don't want to
                     # do. Knowing it is sorted makes it easier to
                     # match the subtitles later.
-                    self.other_subtitles.append(
-                        sorted(self._get_subtitles_from_single_file(stf)))
+                    sorted_st = sorted(
+                        self._get_subtitles_from_single_file(stf))
+                    # Drop empty lines now
+                    sorted_st = [stl for stl in sorted_st if stl.text]
+                    self.other_subtitles.append(sorted_st)
                 except:
                     # We can deal with dropping this subtitles.
                     print(u"Can't load subtitles from file {0}.".format(stf))
                     pass
 
+    def _matching_subtitle_dict(self, start_time, end_time):
+        u"""
+        Return the subtitle dict that best matches the star and end time
+
+        Return that subtitle with start closest to start_time and end
+        closest to end_time, if it overlaps that time span
+        enough. Otherwise raise an RuntimeError.
+        """
+        # First a quick step. Get indices of those too late (NN >
+        # end_time) or too early (NN < start_time -
+        # longest_title). (We are comparing subtitle lines to times,
+        # which is OK. The start time is taken.)
+        pass
+
+    def _get_subtitle_dict(self, start_time, end_time):
+        u"""
+        Return a subtitle dict for the given start and end time.
+
+        This tries to get the line from master_subtitles that best
+        matches the start and end time, and returns that. When there
+        is no line that matches, we create a new dict and insert it
+        into the master_subtitles and return it.
+        """
+        try:
+            return self._matching_subtitle_dict(start_time, end_time)
+        except RuntimeError:
+            # No matching line: create a new one
+            line_dict = {}
+            line_dict['start'] = self._start_time_stamp(start_time)
+            line_dict['end'] = end_time
+            # With empty expression.
+            line_dict['expr'] = u''
+            line_dict['length'] = line_dict['end'] - line_dict['start']
+            if line_dict['length'] > self.longest_title:
+                self.longest_title = line_dict['length']
+            # The bisect makes the finding where we should insert
+            # faster (O(log(n))). The actual insert can’t be that fast
+            # (O(n)). To be honest, i use it mostly for the coding
+            # conveniance.
+            # Only it doesn't work.
+            bisect.insort(master_subtitles, line_dict)
+            return line_dict
+
+
     def _add_line_to_subtiles(self, st_line, st_name):
+        line_to_add_to = self._get_subtitle_line(
+            st_line.start, st_line.end)
         pass
 
     def _match_titles(self):
@@ -223,7 +275,7 @@ class JimakuAnki(object):
         Match the times of the subtiles
 
         This goes through the collection and matches other subtitles
-        to the index subtitles, adding them to self.index_subtitles
+        to the master subtitles, adding them to self.master_subtitles
         as ...
         """
         # Go through the _other_ subtitles first.
@@ -242,7 +294,7 @@ class JimakuAnki(object):
                 pass
 
     def _fill_deck(self):
-        for dct in self.index_subtitles:
+        for dct in self.master_subtitles:
             note = Note(self.col, model=self.model)
             self._fill_note(note, dct)
             self.col.addNote(note)
