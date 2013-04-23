@@ -12,8 +12,6 @@ Turn a video and sets of subtitles into an Anki2 deck.
 
 import argparse
 
-from libanki.lang import _
-
 from jimakuanki import JimakuAnki
 
 
