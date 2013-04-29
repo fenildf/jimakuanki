@@ -116,6 +116,7 @@ class JimakuAnki(object):
         self.start_dir = os.getcwd()
         self.col = self.get_collection()
         self.dm = self.col.decks
+        self.master_subtitles = []
 
     def add_simple_model(self):
         self.model = models.simple_model(
@@ -142,9 +143,9 @@ class JimakuAnki(object):
             yield start_time + pysubs.misc.Time(ms=count), st_ms + count
             count += 1
 
-    def _start_time_stamp(self, line):
+    def _start_time_stamp(self, start):
         """Return a value to use as the start time string."""
-        for (st, st_ms) in self._start_times(line.start):
+        for (st, st_ms) in self._start_times(start):
             if not st_ms in self.start_times_seen:
                 self.start_times_seen.append(st_ms)
                 return st.to_str('ass')
@@ -200,7 +201,7 @@ class JimakuAnki(object):
                     # We always have start end end.
                     line_dict['start'] = self._start_time_stamp(i_line.start)
                     line_dict['end'] = i_line.end
-                    line_dict['length'] = line_dict['end'] - line_dict['start']
+                    line_dict['length'] = i_line.end - i_line.start
                     if i_line.text:
                         line_dict['expr'] = i_line.plaintext
                         self.master_subtitles.append(line_dict)
@@ -292,11 +293,17 @@ class JimakuAnki(object):
                 pass
 
     def _fill_note(self, note, data):
-        for itms in data:
+        for item in data:
             try:
-                note[k] = v
+                note[item] = data[item]
             except KeyError:
+                print(u'Tried to add {} (value: {})'.format(
+                        item, data.get(item)))
                 pass
+            else:
+                print(u'Added {} (value: {}) (Yay!)'.format(
+                        item, data.get(item)))
+
 
     def _fill_deck(self):
         for dct in self.master_subtitles:
