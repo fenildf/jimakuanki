@@ -3,7 +3,7 @@
 # Copyright © 20122–2013 : Roland Sieker <ospalh@gmail.com>
 
 # Provenance: Based on anki.stdmodels.addBasicModel
-# by Damien Elmes <anki@ichi2.net>
+# Copyright © Damien Elmes <anki@ichi2.net>
 #
 # License: GNU AGPL, version 3 or later;
 # http://www.gnu.org/licenses/agpl.html
@@ -15,6 +15,8 @@ Create a simple static model for the subtitle deck.
 
 import gettext
 import os
+
+from .fields import standard_fields
 
 gettext.bindtextdomain('jimakuanki', os.path.join('.', 'translations'))
 gettext.textdomain('jimakuanki')

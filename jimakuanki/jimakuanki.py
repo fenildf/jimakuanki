@@ -29,29 +29,21 @@ from libanki.notes import Note
 from libanki.storage import _createDB
 
 from . import models
+from .fields import standard_fields
 
 gettext.bindtextdomain('jimakuanki', os.path.join('.', 'translations'))
 gettext.textdomain('jimakuanki')
 _ = gettext.gettext
 
+
+
 # How many ms will we shift to make the time unique
 fudge_timing_max_ms = 500
 
-standard_fields = {
-    'start': _(u'Start'), 'end': _(u'End'), 'exp': _(u'Expression'),
-    'mean': _(u'Meaning'), 'read': _(u'Reading'), 'img': _(u'Image'),
-    'vid': _(u'Video'), 'aud': _(u'Audio')}
-"""
-A few standard fields.
-
-The programm expects a few standard fields. Define the names
-here. Override the content to taste. Later these strings are used to
-set up the model.
-"""
 
 # Set up how leading and trailing field names are generated. For
 # example, the 2nd leadig Expression field gets the field name
-# leading_format.format(field=standard_fields['exp'],
+# leading_format.format(field=standard_fields['expr'],
 # num=lead_trail_num_dict[2]), which be default evaluates to _(u'Leading
 # Expression 2').
 leading_format = _(u'Leading {field}{num}')
@@ -103,8 +95,6 @@ class JimakuAnki(object):
         self.automatic_reading = False
         self.language_names = [u'Expression', u'Meaning']
         self.language_codes = [u'ja', u'en']
-        self.field_list = [u'Start', u'End', u'Expression', u'Meaning',
-                           u'Reading', u'Image', u'Video', u'Audio']
         # Frame rate, that infamous number that is not quite 30.
         self.fps = pysubs.misc.Time.NAMED_FPS['ntsc']
         # We fudge the timing data a bit when there is a second
@@ -197,16 +187,18 @@ class JimakuAnki(object):
                 # No try. Crash-and-burn if we can't load the key subtitles.
                 for i_line in sorted(self._get_subtitles_from_single_file(
                         stf)):
+                    if not i_line.text:
+                        # No point to add empty lines
+                        continue
                     line_dict = {}
-                    # We always have start end end.
                     line_dict['start'] = self._start_time_stamp(i_line.start)
-                    line_dict['end'] = i_line.end
-                    line_dict['length'] = i_line.end - i_line.start
-                    if i_line.text:
-                        line_dict['expr'] = i_line.plaintext
-                        self.master_subtitles.append(line_dict)
-                        if line_dict['length'] > self.longest_title:
-                            self.longest_title = line_dict['length']
+                    line_dict['end'] = i_line.end.to_str('ass')
+                    line_dict['expr'] = i_line.plaintext
+                    length = i_line.end - i_line.start
+                    if length > self.longest_title:
+                        self.longest_title = length
+                    line_dict['length'] = length.to_str('ass')
+                    self.master_subtitles.append(line_dict)
             else:
                 try:
                     # We sort the subtitles (by start time.)  (Here
@@ -259,12 +251,13 @@ class JimakuAnki(object):
             # No matching line: create a new one
             line_dict = {}
             line_dict['start'] = self._start_time_stamp(start_time)
-            line_dict['end'] = end_time
+            line_dict['end'] = end_time.to_str('ass')
             # With empty expression.
             line_dict['expr'] = u''
-            line_dict['length'] = end_time - start_time
-            if line_dict['length'] > self.longest_title:
-                self.longest_title = line_dict['length']
+            length = end_time - start_time
+            line_dict['length'] = length.to_str('ass')
+            if length > self.longest_title:
+                self.longest_title = length
             # The bisect makes the finding where we should insert
             # faster (O(log(n))). The actual insert can’t be that fast
             # (O(n)). To be honest, i use it mostly for the coding
@@ -298,16 +291,18 @@ class JimakuAnki(object):
                 pass
 
     def _fill_note(self, note, data):
-        for item in data:
+        for k, v in data.iteritems():
             try:
-                note[item] = data[item]
+                field = standard_fields[k]
             except KeyError:
-                print(u'Tried to add {} (value: {})'.format(
-                        item, data.get(item)))
+                field = k
+            try:
+                note[field] = v
+            except KeyError:
+                print(u'Tried to add {} (value: {})'.format(k, v))
                 pass
             else:
-                print(u'Added {} (value: {}) (Yay!)'.format(
-                        item, data.get(item)))
+                print(u'Added {}/{} (value: {}) (Yay!)'.format(field, k, v))
 
 
     def _fill_deck(self):
