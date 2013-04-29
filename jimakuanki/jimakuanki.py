@@ -239,6 +239,8 @@ class JimakuAnki(object):
         # end_time) or too early (NN < start_time -
         # longest_title). (We are comparing subtitle lines to times,
         # which is OK. The start time is taken.)
+        # raise RuntimeError(u'write code for _matching_subtitle_dict')
+        raise NotImplementedError(u'write code for _matching_subtitle_dict')
         pass
 
     def _get_subtitle_dict(self, start_time, end_time):
@@ -252,14 +254,15 @@ class JimakuAnki(object):
         """
         try:
             return self._matching_subtitle_dict(start_time, end_time)
-        except RuntimeError:
+        # except RuntimeError:
+        except (RuntimeError, NotImplementedError):
             # No matching line: create a new one
             line_dict = {}
             line_dict['start'] = self._start_time_stamp(start_time)
             line_dict['end'] = end_time
             # With empty expression.
             line_dict['expr'] = u''
-            line_dict['length'] = line_dict['end'] - line_dict['start']
+            line_dict['length'] = end_time - start_time
             if line_dict['length'] > self.longest_title:
                 self.longest_title = line_dict['length']
             # The bisect makes the finding where we should insert
@@ -267,13 +270,15 @@ class JimakuAnki(object):
             # (O(n)). To be honest, i use it mostly for the coding
             # conveniance.
             # Only it doesn't work.
-            bisect.insort(master_subtitles, line_dict)
+            print('Todo')
+            bisect.insort(self.master_subtitles, line_dict)
             return line_dict
 
 
     def _add_line_to_subtiles(self, st_line, st_name):
-        line_to_add_to = self._get_subtitle_line(
+        dict_to_add_to = self._get_subtitle_dict(
             st_line.start, st_line.end)
+        print (u'Now check the times and add the text from st_line')
         pass
 
     def _match_titles(self):
