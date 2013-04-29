@@ -11,11 +11,19 @@ Turn a video and sets of subtitles into an Anki2 deck.
 """
 
 import argparse
+import gettext
+import os
 
 from jimakuanki import JimakuAnki
 
+gettext.bindtextdomain(
+    'jimakuanki', os.path.join('.', 'jimakuanki', 'translations'))
+gettext.textdomain('jimakuanki')
+_ = gettext.gettext
+
 
 def setup_from_args(ma, args):
+    """Set up the JimakuAnki object with command line values. """
     ma.out_file = ma.fix_path(args.output)
     ma.deck_id = ma.dm.id(args.deck)
     ma.model_name = _(u'Subtitles ({})').format(args.deck)

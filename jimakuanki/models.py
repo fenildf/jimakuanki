@@ -12,7 +12,13 @@
 """
 Create a simple static model for the subtitle deck.
 """
-from libanki.lang import _
+
+import gettext
+import os
+
+gettext.bindtextdomain('jimakuanki', os.path.join('.', 'translations'))
+gettext.textdomain('jimakuanki')
+_ = gettext.gettext
 
 remove_arial = True
 extra_styling = '''

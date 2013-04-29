@@ -19,15 +19,20 @@ import pysubs  # N.B.: This has to be the py27compat branch.
 import random
 import shutil
 import tempfile
+import gettext
+
 
 from libanki.collection import _Collection
 from libanki.db import DB
 from libanki.exporting import AnkiPackageExporter
 from libanki.notes import Note
 from libanki.storage import _createDB
-from libanki.lang import _
 
 from . import models
+
+gettext.bindtextdomain('jimakuanki', os.path.join('.', 'translations'))
+gettext.textdomain('jimakuanki')
+_ = gettext.gettext
 
 # How many ms will we shift to make the time unique
 fudge_timing_max_ms = 500
